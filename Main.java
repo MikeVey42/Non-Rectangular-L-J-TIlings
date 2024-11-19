@@ -7,8 +7,12 @@ public class Main {
     public static final int WIDTH = 20;
     public static final int TETRONIMOS = (HEIGHT * WIDTH) / 4;  
 
+    public static long checkRectanglesTime;
+
     public static void main(String[] args) {
         int[][] originalBoard = new int[HEIGHT][WIDTH];
+
+        checkRectanglesTime = 0;
 
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
@@ -21,6 +25,7 @@ public class Main {
 
         printBoard(solution);
         System.out.println((System.currentTimeMillis() - start) / 1000f);
+        System.out.println(checkRectanglesTime / 1000f);
     } 
 
     private static int[][] searchLayer(int board[][], int number, int startX, int startY) {
@@ -109,37 +114,48 @@ public class Main {
     }
 
     private static boolean containsRectangle(int [][] board) {
+        long start = System.currentTimeMillis();
 
         for (int y1 = 0; y1 < HEIGHT; y1++) {
             for (int x1 = 0; x1 < WIDTH; x1++) {
-                if (y1 == 0 && x1 == 0) continue;
                 for (int y2 = y1 + 1; y2 < HEIGHT; y2++) {
+                    int rectangleHeight = (y2-y1+1);
                     for (int x2 = x1 + 1; x2 < WIDTH; x2++) {
-                        int area = ((y2-y1+1)*(x2-x1+1));
+                        // Info about subrectangle
+                        int rectangleWidth = (x2-x1+1);
+                        int area = rectangleWidth * rectangleHeight;
+                        // Subrectangles to skip
                         if (area%8!=0) continue;
-                        if (countUniques(board, x1, y1, x2, y2) == area / 4) {
+                        if (rectangleWidth == 2 && rectangleHeight != 4) continue;
+                        if (rectangleHeight == 2 && rectangleWidth != 4) continue;
+                        if (rectangleHeight == HEIGHT && rectangleWidth == WIDTH) continue;
+
+
+                        if (!tooManyUniques(board, x1, y1, x2, y2, area/4)) {
+                            checkRectanglesTime += (System.currentTimeMillis() - start);
                             return true;
                         }
                     }
                 }
             }
         }
-
+        checkRectanglesTime += (System.currentTimeMillis() - start);
         return false;
     }
 
-    private static int countUniques(int[][] board, int x1, int y1, int x2, int y2) {
+    private static boolean tooManyUniques(int[][] board, int x1, int y1, int x2, int y2, int max) {
         ArrayList<Integer> nums = new ArrayList<Integer>(){};
 
         for (int y = y1; y <= y2; y++) {
             for (int x = x1; x <= x2; x++) {
                 if (!nums.contains(board[y][x])) {
                     nums.add(board[y][x]);
+                    if (nums.size() > max) return true;
                 }
             }
         }
 
-        return nums.size();
+        return false;
     }
 
     private static void printBoard(int[][] board) {
