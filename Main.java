@@ -3,8 +3,8 @@ import java.util.Arrays;
 
 public class Main { 
 
-    public static final int HEIGHT = 16;
-    public static final int WIDTH = 16;
+    public static final int HEIGHT = 20;
+    public static final int WIDTH = 20;
     public static final int TETRONIMOS = (HEIGHT * WIDTH) / 4;  
 
     public static void main(String[] args) {
@@ -16,12 +16,14 @@ public class Main {
             }
         }
 
-        int[][] solution = searchLayer(originalBoard, 1);
+        long start = System.currentTimeMillis();
+        int[][] solution = searchLayer(originalBoard, 1, 0, 0);
 
         printBoard(solution);
+        System.out.println((System.currentTimeMillis() - start) / 1000f);
     } 
 
-    private static int[][] searchLayer(int board[][], int number) {
+    private static int[][] searchLayer(int board[][], int number, int startX, int startY) {
         if (number - 1 == TETRONIMOS) {
             if (containsRectangle(board)) {
                 return null;
@@ -31,8 +33,8 @@ public class Main {
         }
 
 
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
+        for (int y = startY; y < HEIGHT; y++) {
+            for (int x = (y==startY?startX:0); x < WIDTH; x++) {
                 // Skip if it's full
                 if (board[y][x] != 0) {
                     continue;
@@ -41,19 +43,13 @@ public class Main {
                 // Check all tetronimos
                 for (int rotation = 0; rotation < 4; rotation++){
                     for (int startSquare = 0; startSquare < 4; startSquare++) {
-                        if (tetronimoIsPlaceable(board, x, y, false, rotation, startSquare)) {
-                            int[][] newBoard = placeTetronimo(board, number, x, y, false, rotation, startSquare);
-                            int[][] result = searchLayer(newBoard, number + 1);
-                            if (result != null) {
-                                return result;
-                            }
-                        }
-
-                        if (tetronimoIsPlaceable(board, x, y, true, rotation, startSquare)) {
-                            int[][] newBoard = placeTetronimo(board, number, x, y, true, rotation, startSquare);
-                            int[][] result = searchLayer(newBoard, number + 1);
-                            if (result != null) {
-                                return result;
+                        for (int L = 0; L < 2; L++) {
+                            if (tetronimoIsPlaceable(board, x, y, L==1, rotation, startSquare)) {
+                                int[][] newBoard = placeTetronimo(board, number, x, y, L==1, rotation, startSquare);
+                                int[][] result = searchLayer(newBoard, number + 1, x, y);
+                                if (result != null) {
+                                    return result;
+                                }
                             }
                         }
                     }
