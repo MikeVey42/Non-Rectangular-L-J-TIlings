@@ -3,14 +3,18 @@ import java.util.Arrays;
 
 public class Main { 
 
-    public static final int HEIGHT = 20;
-    public static final int WIDTH = 20;
+    public static final int HEIGHT = 16;
+    public static final int WIDTH = 16;
     public static final int TETRONIMOS = (HEIGHT * WIDTH) / 4;  
 
     public static long checkRectanglesTime;
 
+    public static ArrayList<int[]> possibleSubrectangles;
+
     public static void main(String[] args) {
         int[][] originalBoard = new int[HEIGHT][WIDTH];
+
+        possibleSubrectangles = generateSubrectangles();
 
         checkRectanglesTime = 0;
 
@@ -116,34 +120,24 @@ public class Main {
     private static boolean containsRectangle(int [][] board) {
         long start = System.currentTimeMillis();
 
-        for (int y1 = 0; y1 < HEIGHT; y1++) {
-            for (int x1 = 0; x1 < WIDTH; x1++) {
-                for (int y2 = y1 + 1; y2 < HEIGHT; y2++) {
-                    int rectangleHeight = (y2-y1+1);
-                    for (int x2 = x1 + 1; x2 < WIDTH; x2++) {
-                        // Info about subrectangle
-                        int rectangleWidth = (x2-x1+1);
-                        int area = rectangleWidth * rectangleHeight;
-                        // Subrectangles to skip
-                        if (area%8!=0) continue;
-                        if (rectangleWidth == 2 && rectangleHeight != 4) continue;
-                        if (rectangleHeight == 2 && rectangleWidth != 4) continue;
-                        if (rectangleHeight == HEIGHT && rectangleWidth == WIDTH) continue;
+        for (int[] subrectangle : possibleSubrectangles) {
 
-
-                        if (!tooManyUniques(board, x1, y1, x2, y2, area/4)) {
-                            checkRectanglesTime += (System.currentTimeMillis() - start);
-                            return true;
-                        }
-                    }
-                }
+            if (!tooManyUniques(board, subrectangle)) {
+                checkRectanglesTime += (System.currentTimeMillis() - start);
+                return true;
             }
         }
+
         checkRectanglesTime += (System.currentTimeMillis() - start);
         return false;
     }
 
-    private static boolean tooManyUniques(int[][] board, int x1, int y1, int x2, int y2, int max) {
+    private static boolean tooManyUniques(int[][] board, int[] subrectangle) {
+        int x1 = subrectangle[0];
+        int y1 = subrectangle[1];
+        int x2 = subrectangle[2];
+        int y2 = subrectangle[3];
+        int max = ((x2 - x1 + 1) * (y2 - y1 + 1)) / 4;
         ArrayList<Integer> nums = new ArrayList<Integer>(){};
 
         for (int y = y1; y <= y2; y++) {
@@ -178,5 +172,31 @@ public class Main {
             result[i] = Arrays.copyOf(original[i], WIDTH);
         }
         return result;
+    }
+
+    private static ArrayList<int[]> generateSubrectangles() {
+        ArrayList<int[]> subrectangles = new ArrayList<int[]>();
+        for (int y1 = 0; y1 < HEIGHT; y1++) {
+            for (int x1 = 0; x1 < WIDTH; x1++) {
+                for (int y2 = y1 + 1; y2 < HEIGHT; y2++) {
+                    int rectangleHeight = (y2-y1+1);
+                    for (int x2 = x1 + 1; x2 < WIDTH; x2++) {
+                        // Info about subrectangle
+                        int rectangleWidth = (x2-x1+1);
+                        int area = rectangleWidth * rectangleHeight;
+                        // Subrectangles to skip
+                        if (area%8!=0) continue;
+                        if (rectangleWidth == 2 && rectangleHeight != 4) continue;
+                        if (rectangleHeight == 2 && rectangleWidth != 4) continue;
+                        if (rectangleHeight == HEIGHT && rectangleWidth == WIDTH) continue;
+
+
+                        subrectangles.add(new int[]{x1, y1, x2, y2});
+                    }
+                }
+            }
+        }
+
+        return subrectangles;
     }
 }
