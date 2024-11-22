@@ -3,8 +3,8 @@ import java.util.Arrays;
 
 public class Main { 
 
-    public static final int HEIGHT = 16;
-    public static final int WIDTH = 16;
+    public static final int HEIGHT = 20;
+    public static final int WIDTH = 20;
     public static final int TETRONIMOS = (HEIGHT * WIDTH) / 4;  
 
     public static long checkRectanglesTime;
@@ -55,6 +55,9 @@ public class Main {
                         for (int L = 0; L < 2; L++) {
                             if (tetronimoIsPlaceable(board, x, y, L==1, rotation, startSquare)) {
                                 int[][] newBoard = placeTetronimo(board, number, x, y, L==1, rotation, startSquare);
+                                if (!tooManyUniques(newBoard, getBounds(x, y, Tetronimo.possiblePlacements[L][rotation][startSquare]))) {
+                                    continue;
+                                }
                                 int[][] result = searchLayer(newBoard, number + 1, x, y);
                                 if (result != null) {
                                     return result;
@@ -152,14 +155,23 @@ public class Main {
         return false;
     }
 
+    private static int[] getBounds(int x, int y, int[][]squares) {
+        int minX = Math.min(Math.min(0, squares[0][0]), Math.min(squares[1][0], squares[2][0]));
+        int maxX = Math.max(Math.max(0, squares[0][0]), Math.max(squares[1][0], squares[2][0]));
+        int minY = Math.min(Math.min(0, squares[0][1]), Math.min(squares[1][1], squares[2][1]));
+        int maxY = Math.max(Math.max(0, squares[0][1]), Math.max(squares[1][1], squares[2][1]));
+
+        return new int[]{x + minX, y + minY, x + maxX, y + maxY};
+    }
+
     private static void printBoard(int[][] board) {
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
-                if (board[y][x] < 10) {
-                    System.out.print(board[y][x] + " ");
-                }else {
-                    System.out.print((char)(board[y][x] + 55) + " ");
-                }
+                //if (board[y][x] < 10) {
+                  //  System.out.print(board[y][x] + " ");
+                //}else {
+                    System.out.print((char)(board[y][x] + 32) + " ");
+                //}
 
             }
             System.out.println();
@@ -178,16 +190,14 @@ public class Main {
         ArrayList<int[]> subrectangles = new ArrayList<int[]>();
         for (int y1 = 0; y1 < HEIGHT; y1++) {
             for (int x1 = 0; x1 < WIDTH; x1++) {
-                for (int y2 = y1 + 1; y2 < HEIGHT; y2++) {
+                for (int y2 = y1 + 2; y2 < HEIGHT; y2++) {
                     int rectangleHeight = (y2-y1+1);
-                    for (int x2 = x1 + 1; x2 < WIDTH; x2++) {
+                    for (int x2 = x1 + 2; x2 < WIDTH; x2++) {
                         // Info about subrectangle
                         int rectangleWidth = (x2-x1+1);
                         int area = rectangleWidth * rectangleHeight;
                         // Subrectangles to skip
                         if (area%8!=0) continue;
-                        if (rectangleWidth == 2 && rectangleHeight != 4) continue;
-                        if (rectangleHeight == 2 && rectangleWidth != 4) continue;
                         if (rectangleHeight == HEIGHT && rectangleWidth == WIDTH) continue;
 
 
